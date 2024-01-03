@@ -3,9 +3,12 @@ import {
   DUTCH_TEN,
   DUTCH_UNIT,
   ENGLISH_MAGNITUDE,
-  ENGLISH_SPECIFIC_SPLIT,
   ENGLISH_TEN,
   ENGLISH_UNIT,
+  ENGLISH_SPECIFIC_SPLIT,
+  FRENCH_MAGNITUDE,
+  FRENCH_TEN,
+  FRENCH_UNIT,
   TOKEN_TYPE,
 } from './constants';
 import { getAllIndexes } from './util';
@@ -325,6 +328,53 @@ export const modifyEnglish = (chunk: string): string | string[] => {
         throw 'CANNOT PARSE CHUNK INTO NUMBER (ENGLISH: CANNOT FIND A GOOD SPLITTER)';
       }
     }
+  }
+};
+
+//@ts-ignore
+export const modifyFrench = (chunk: string): string | string[] => {
+  const units = [...Object.keys(FRENCH_UNIT)];
+  const tens = [...Object.keys(FRENCH_TEN)];
+  const magnitudes = [...Object.keys(FRENCH_MAGNITUDE)];
+
+  if (
+    units.includes(chunk) ||
+    tens.includes(chunk) ||
+    magnitudes.includes(chunk)
+  ) {
+    return chunk; //This chunk is already a whole number that doesnt need converting
+  }
+
+  const possibleUnits: string[] = units.filter(unit => chunk.includes(unit));
+  const possibleTens: string[] = tens.filter(unit => chunk.includes(unit));
+  const possibleMagnitudes: string[] = magnitudes.filter(unit =>
+    chunk.includes(unit)
+  );
+
+  const possibilities: Possibility[] = calculatePossibilities(
+    possibleUnits,
+    possibleTens,
+    possibleMagnitudes,
+    chunk
+  );
+  //Check which possibilities DO NOT OVERLAP and are valid.
+  if (possibilities.length >= 2) {
+    const { longestStart, longestEnd } = predict(possibilities, chunk);
+    if (!longestStart || !longestEnd) return [];
+    
+    // Pick longest part of TEN type and the mathing remaining part
+    if (longestStart.type !== TOKEN_TYPE.TEN) {
+      throw 'CANNOT PARSE CHUNK INTO NUMBER (FRENCH: LONGEST PART IS NOT OF TYPE TEN)'
+    }
+
+    const matchingUnit = possibilities.find((possibility) =>
+      possibility.type === TOKEN_TYPE.UNIT && possibility.start > longestStart.end && possibility.end === chunk.length - 1
+    );
+    if (matchingUnit === undefined) {
+      throw 'CANNOT PARSE CHUNK INTO NUMBER (FRENCH: CAN\'T FIND UNIT PART)';
+    }
+
+    return [longestStart.value, matchingUnit.value]
   }
 };
 

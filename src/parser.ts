@@ -11,7 +11,7 @@ import {
   TOKEN_TYPE,
   UNIT_KEYS,
 } from './constants';
-import { modifyDutch, modifyEnglish } from './modifiers';
+import { modifyDutch, modifyEnglish, modifyFrench } from './modifiers';
 import { HANDLE_TOKEN, Languages, Region, SubRegion, Token } from './types';
 
 /**
@@ -276,6 +276,9 @@ export const parser = (text: string, language: Languages): Region[] => {
         break;
       case Languages['en-us']:
         splitted = modifyEnglish(currentValue);
+        break;
+      case Languages['fr-fr']:
+        splitted = modifyFrench(currentValue);
         break;
     }
 
