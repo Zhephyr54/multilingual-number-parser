@@ -6,6 +6,7 @@ export type Options = Partial<{
   numbersOnly: boolean;
   oneNumber: boolean;
   useSuffix: boolean;
+  tryFix: boolean;
   debug: boolean;
   language: Languages;
 }>;

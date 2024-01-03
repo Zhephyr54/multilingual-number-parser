@@ -1,3 +1,11 @@
+import { Languages } from "./types";
+
+export interface Fix {
+  to: string;
+  from: string;
+  fixables: Set<string>;
+}
+
 export const ENGLISH_UNIT = {
   zero: 0,
   first: 1,
@@ -155,66 +163,67 @@ export const DUTCH_MAGNITUDE = {
 };
 
 export const FRENCH_UNIT = {
-    zéro: 0,
-    un: 1,
-    une: 1,
-    deux: 2,
-    trois: 3,
-    quatre: 4,
-    cinq: 5,
-    six: 6,
-    sept: 7,
-    huit: 8,
-    neuf: 9,
-    dix: 10,
-    onze: 11,
-    douze: 12,
-    treize: 13,
-    quatorze: 14,
-    quinze: 15,
-    seize: 16,
-    'dix-sept': 17,
-    'dix-huit': 18,
-    'dix-neuf': 19
+  zéro: 0,
+  zero: 0,
+  un: 1,
+  une: 1,
+  deux: 2,
+  trois: 3,
+  quatre: 4,
+  cinq: 5,
+  six: 6,
+  sept: 7,
+  huit: 8,
+  neuf: 9,
+  dix: 10,
+  onze: 11,
+  douze: 12,
+  treize: 13,
+  quatorze: 14,
+  quinze: 15,
+  seize: 16,
+  'dix-sept': 17,
+  'dix-huit': 18,
+  'dix-neuf': 19
 }
 
 export const FRENCH_TEN = {
-    vingt: 20,
-    trente: 30,
-    quarante: 40,
-    cinquante: 50,
-    soixante: 60,
-    'soixante-dix': 70,
-    'quatre-vingts': 80,
-    'quatre-vingt': 80,
-    'quatre-vingt-dix': 90
+  vingt: 20,
+  trente: 30,
+  quarante: 40,
+  cinquante: 50,
+  soixante: 60,
+  'soixante-dix': 70,
+  'quatre-vingts': 80,
+  'quatre-vingt': 80,
+  'quatre-vingt-dix': 90
 };
 
 export const FRENCH_MAGNITUDE = {
-    cent: 100,
-    cents: 100,
-    mille: 1000,
-    million: 1000000,
-    millions: 1000000,
-    milliard: 1000000000,
-    milliards: 1000000000,
-    billion: 1000000000000,
-    billions: 1000000000000,
-    billiard: 1000000000000000,
-    billiards: 1000000000000000,
-    trillion: 1000000000000000000,
-    trillions: 1000000000000000000,
-    trilliard: 1000000000000000000000,
-    trilliards: 1000000000000000000000,
-    quadrillion: 1000000000000000000000000,
-    quadrillions: 1000000000000000000000000,
-    quadrilliard: 1000000000000000000000000000,
-    quadrilliards: 1000000000000000000000000000,
-    quintillion: 1000000000000000000000000000000,
-    quintillions: 1000000000000000000000000000000,
-    quintilliard: 1000000000000000000000000000000000,
-    quintilliards: 1000000000000000000000000000000000,
-  };
+  cent: 100,
+  cents: 100,
+  mille: 1000,
+  million: 1000000,
+  millions: 1000000,
+  milliard: 1000000000,
+  milliards: 1000000000,
+  billion: 1000000000000,
+  billions: 1000000000000,
+  billiard: 1000000000000000,
+  billiards: 1000000000000000,
+  trillion: 1000000000000000000,
+  trillions: 1000000000000000000,
+  trilliard: 1000000000000000000000,
+  trilliards: 1000000000000000000000,
+  quadrillion: 1000000000000000000000000,
+  quadrillions: 1000000000000000000000000,
+  quadrilliard: 1000000000000000000000000000,
+  quadrilliards: 1000000000000000000000000000,
+  quintillion: 1000000000000000000000000000000,
+  quintillions: 1000000000000000000000000000000,
+  quintilliard: 1000000000000000000000000000000000,
+  quintilliards: 1000000000000000000000000000000000,
+};
 
 export const NUMBER = {
   ...ENGLISH_UNIT,
@@ -281,3 +290,60 @@ export const BLACKLIST_SINGULAR_WORDS = ['a', 'een'];
 export const DUTCH_SPECIFIC_SPLIT = ['en', 'ën'];
 export const ENGLISH_SPECIFIC_SPLIT = ['-'];
 export const FRENCH_SPECIFIC_SPLIT = ['-'];
+
+const FRENCH_FIXABLES_UNIT = [
+  'deux',
+  'trois',
+  'quatre',
+  'cinq',
+  'six',
+  'sept',
+  'huit',
+  'neuf'
+]
+const { 'soixante-dix': _, 'quatre-vingt-dix': __, ...FRENCH_FIXABLES_TEN_OBJECT } = FRENCH_TEN;
+const FRENCH_FIXABLES_TEN = Object.keys(FRENCH_FIXABLES_TEN_OBJECT);
+
+const FRENCH_FIXES: Fix[] = [
+  {
+    from: ' ',
+    to: '-',
+    fixables: new Set([
+      'dix-sept',
+      'dix-huit',
+      'dix-neuf',
+      'soixante-dix',
+      'soixante-douze',
+      'soixante-treize',
+      'soixante-quatorze',
+      'soixante-quinze',
+      'soixante-seize',
+      'soixante-dix-sept',
+      'soixante-dix-huit',
+      'soixante-dix-neuf',
+      'quatre-vingts',
+      'quatre-vingt',
+      'quatre-vingt-un',
+      'quatre-vingt-une',
+      'quatre-vingt-dix',
+      'quatre-vingt-onze',
+      'quatre-vingt-douze',
+      'quatre-vingt-treize',
+      'quatre-vingt-quatorze',
+      'quatre-vingt-quinze',
+      'quatre-vingt-seize',
+      'quatre-vingt-dix-sept',
+      'quatre-vingt-dix-huit',
+      'quatre-vingt-dix-neuf',
+      ...FRENCH_FIXABLES_TEN.flatMap((fixableTen) =>
+        FRENCH_FIXABLES_UNIT.flatMap(
+          (fixabledUnit) => `${fixableTen}-${fixabledUnit}`))
+    ])
+  }
+];
+
+export const FIXES: Record<Languages, Fix[]> = {
+  [Languages['nl-nl']]: [],
+  [Languages['en-us']]: [],
+  [Languages['fr-fr']]: FRENCH_FIXES
+}

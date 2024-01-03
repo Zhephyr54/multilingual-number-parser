@@ -1,8 +1,9 @@
 /* eslint-disable no-extra-parens */
-import { compileSubRegion } from './compiler';
+import { Options, compileSubRegion } from './compiler';
 import {
   BLACKLIST_SINGULAR_WORDS,
   DECIMALS,
+  FIXES,
   JOINERS,
   MAGNITUDE_KEYS,
   NUMBER_WORDS,
@@ -13,6 +14,8 @@ import {
 } from './constants';
 import { modifyDutch, modifyEnglish, modifyFrench } from './modifiers';
 import { HANDLE_TOKEN, Languages, Region, SubRegion, Token } from './types';
+
+type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] }
 
 /**
  * Check if token can be appened to the sub region
@@ -256,6 +259,34 @@ const getTokenType = (chunk: string): TOKEN_TYPE => {
   if (DECIMALS.includes(chunk.toLowerCase())) return TOKEN_TYPE.DECIMAL;
 };
 
+const tryFixText = (text: string, language: Languages): string => {
+  let fixedText = text;
+
+  FIXES[language].forEach(({ from, to, fixables }) => {
+    const splitted = fixedText.split(from);
+    let currentPart = splitted[0];
+    let resultTextParts = [currentPart];
+    let currentResultTextIndex = 0;
+
+    for (let i = 1; i < splitted.length; i++) {
+      const possibleFix = `${currentPart}${to}${splitted[i]}`;
+      if (fixables.has(possibleFix)) {
+        currentPart = possibleFix;
+        resultTextParts[currentResultTextIndex] = possibleFix;
+      }
+      else {
+        currentPart = splitted[i];
+        resultTextParts.push(currentPart);
+        currentResultTextIndex++;
+      }
+    }
+
+    fixedText = resultTextParts.join(from);
+  });
+
+  return fixedText;
+}
+
 /**
  * Parse the actual string to regions.
  * !Should not be called externally: use wordsToNumbers()
@@ -263,8 +294,11 @@ const getTokenType = (chunk: string): TOKEN_TYPE => {
  * @param {string} text the actual string that needs to be converted
  * @param {Languages} language the language from the passed string. Default = english
  */
-export const parser = (text: string, language: Languages): Region[] => {
-  let splitted: string[] = text.split(/(\s|[[:punct:]]|\(|\))/i);
+export const parser = (text: string, options: WithRequired<Options, 'language'>): Region[] => {
+  const { language, tryFix } = options;
+  const finalText = tryFix ? tryFixText(text, language) : text;
+
+  let splitted: string[] = finalText.split(/(\s|[[:punct:]]|\(|\))/i);
   const tokens: Token[] = splitted.reduce((result: Token[], currentValue: string) => {
     const start = result.length ? result[result.length - 1].end + 1 : 0;
     const end = start + currentValue.length;

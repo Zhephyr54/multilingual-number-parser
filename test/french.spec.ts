@@ -339,6 +339,26 @@ describe('Convert words to numbers', () => {
     chai.expect(result).to.equal(1000001);
   });
 
+  // More decimal tests
+
+  it('zéro virgule deux cent cinquante-six', () => {
+    const words = 'zéro virgule deux cent cinquante-six';
+    const result = wordsToNumbers(words, { language: Languages['fr-fr'] });
+    chai.expect(result).to.equal(0.256);
+  });
+
+  it('zero virgule mille quatre cent quatre-vingt-sept', () => {
+    const words = 'zéro virgule mille quatre cent quatre-vingt-sept';
+    const result = wordsToNumbers(words, { language: Languages['fr-fr'] });
+    chai.expect(result).to.equal(0.1487);
+  });
+
+  it('quatre-vingt-sept mille cinq cent quarante et un virgule un milliard huit cent quarante-neuf millions quatre cent soixante-quatre mille six cent cinquante-quatre', () => {
+    const words = 'quatre-vingt-sept mille cinq cent quarante et un virgule un milliard huit cent quarante-neuf millions quatre cent soixante-quatre mille six cent cinquante-quatre';
+    const result = wordsToNumbers(words, { language: Languages['fr-fr'] });
+    chai.expect(result).to.equal(87541.1849464654);
+  });
+
   // More tests with unit and items in text
 
   it('deux virgule cinq kilo de carottes', () => {
@@ -376,5 +396,69 @@ describe('Convert words to numbers', () => {
     const result = wordsToNumbers(words, { language: Languages['fr-fr'] });
     chai.expect(result).to.equal('30 grammes de farine');
   });
-    
+
+  // Without proper '-' splitter (tryFix)
+
+  it('soixante dix trucs', () => {
+    const words = 'soixante dix trucs';
+    const result = wordsToNumbers(
+      words,
+      { language: Languages['fr-fr'], tryFix: true }
+    );
+    chai.expect(result).to.equal('70 trucs');
+  });
+
+  it('quatre vingt patates', () => {
+    const words = 'quatre vingt patates';
+    const result = wordsToNumbers(
+      words,
+      { language: Languages['fr-fr'], tryFix: true }
+    );
+    chai.expect(result).to.equal('80 patates');
+  });
+
+  it('quatre vingt huit patates', () => {
+    const words = 'quatre vingt huit patates';
+    const result = wordsToNumbers(
+      words,
+      { language: Languages['fr-fr'], tryFix: true }
+    );
+    chai.expect(result).to.equal('88 patates');
+  });
+
+  it('quatre vingt dix huit patates', () => {
+    const words = 'quatre vingt dix huit patates';
+    const result = wordsToNumbers(
+      words,
+      { language: Languages['fr-fr'], tryFix: true }
+    );
+    chai.expect(result).to.equal('98 patates');
+  });
+
+  it('trois cent trente deux bananes', () => {
+    const words = 'trois cent trente deux bananes';
+    const result = wordsToNumbers(
+      words,
+      { language: Languages['fr-fr'], tryFix: true }
+    );
+    chai.expect(result).to.equal('332 bananes');
+  });
+
+  it('quatre vingt deux patates trente deux', () => {
+    const words = 'quatre vingt deux patates trente deux';
+    const result = wordsToNumbers(
+      words,
+      { language: Languages['fr-fr'], tryFix: true }
+    );
+    chai.expect(result).to.equal('82 patates 32');
+  });
+
+  it('quatre vingt dix sept grammes de farine', () => {
+    const words = 'quatre vingt dix sept grammes de farine';
+    const result = wordsToNumbers(
+      words,
+      { language: Languages['fr-fr'], tryFix: true }
+    );
+    chai.expect(result).to.equal('97 grammes de farine');
+  });
 });
