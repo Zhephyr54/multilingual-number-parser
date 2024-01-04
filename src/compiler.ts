@@ -3,16 +3,16 @@ import { Languages, Region, SubRegion } from './types';
 import { splice } from './util';
 
 export type Options = Partial<{
-  numbersOnly: boolean;
-  oneNumber: boolean;
-  useSuffix: boolean;
-  tryFix: boolean;
-  debug: boolean;
-  language: Languages;
+    numbersOnly: boolean;
+    oneNumber: boolean;
+    useSuffix: boolean;
+    tryFix: boolean;
+    debug: boolean;
+    language: Languages;
 }>;
 
 export const convertChunkToNumber = (txt: string): number => {
-  return (NUMBER as any)[txt];
+    return NUMBER[txt as keyof typeof NUMBER];
 };
 /**
  * Custom created compiler which acts better than the original one.
@@ -25,36 +25,41 @@ export const convertChunkToNumber = (txt: string): number => {
  * @param {boolean} decimal passed in by compileRegion
  * @returns
  */
-export const compileSubRegion = (subRegion: SubRegion, decimal: boolean = false): { sum: number; decimal: boolean } => {
-  let sum = 0;
-  switch (subRegion.type) {
-    case TOKEN_TYPE.DECIMAL:
-      return { sum: 0, decimal: true };
-    case TOKEN_TYPE.UNIT:
-      if (subRegion.tokens.length > 1 || subRegion.tokens.length === 0)
-        throw 'SHOULD HAVE 1 TOKEN! SUBREGION TYPE = UNIT';
-      sum += convertChunkToNumber(subRegion.tokens[0].lowerCaseValue);
-      break;
-    case TOKEN_TYPE.TEN:
-      if (subRegion.tokens.length > 1 || subRegion.tokens.length === 0)
-        throw 'SHOULD HAVE 1 TOKEN! SUBREGION TYPE = TEN';
-      sum += convertChunkToNumber(subRegion.tokens[0].lowerCaseValue);
-      break;
-    case TOKEN_TYPE.MAGNITUDE:
-      subRegion.tokens.map(token => {
-        switch (token.type) {
-          case TOKEN_TYPE.UNIT:
-          case TOKEN_TYPE.TEN:
-            sum += convertChunkToNumber(token.lowerCaseValue);
+export const compileSubRegion = (
+    subRegion: SubRegion,
+    decimal: boolean = false,
+): { sum: number; decimal: boolean } => {
+    let sum = 0;
+    switch (subRegion.type) {
+        case TOKEN_TYPE.DECIMAL:
+            return { sum: 0, decimal: true };
+        case TOKEN_TYPE.UNIT:
+            if (subRegion.tokens.length > 1 || subRegion.tokens.length === 0)
+                throw new Error('SHOULD HAVE 1 TOKEN! SUBREGION TYPE = UNIT');
+            sum += convertChunkToNumber(subRegion.tokens[0].lowerCaseValue);
             break;
-          case TOKEN_TYPE.MAGNITUDE:
-            if (sum === 0) sum = 1;
-            sum *= convertChunkToNumber(token.lowerCaseValue);
+        case TOKEN_TYPE.TEN:
+            if (subRegion.tokens.length > 1 || subRegion.tokens.length === 0)
+                throw new Error('SHOULD HAVE 1 TOKEN! SUBREGION TYPE = TEN');
+            sum += convertChunkToNumber(subRegion.tokens[0].lowerCaseValue);
             break;
-        }
-      });
-  }
-  return { sum, decimal: decimal };
+        case TOKEN_TYPE.MAGNITUDE:
+            subRegion.tokens.map((token) => {
+                switch (token.type) {
+                    case TOKEN_TYPE.UNIT:
+                    case TOKEN_TYPE.TEN:
+                        sum += convertChunkToNumber(token.lowerCaseValue);
+                        break;
+                    case TOKEN_TYPE.MAGNITUDE:
+                        if (sum === 0) sum = 1;
+                        sum *= convertChunkToNumber(token.lowerCaseValue);
+                        break;
+                    default:
+                        break;
+                }
+            });
+    }
+    return { sum, decimal: decimal };
 };
 
 /**
@@ -68,19 +73,19 @@ export const compileSubRegion = (subRegion: SubRegion, decimal: boolean = false)
  * @returns {number} the value of the region
  */
 export const compileRegion = (region: Region): number => {
-  let before: number = 0;
-  let after: number = 0;
-  let isDecimal: boolean = false;
-  for (const subRegion of region.subRegions) {
-    const { sum, decimal } = compileSubRegion(subRegion, isDecimal);
-    isDecimal = decimal;
-    if (decimal) {
-      after += sum;
-    } else {
-      before += sum;
+    let before: number = 0;
+    let after: number = 0;
+    let isDecimal: boolean = false;
+    for (const subRegion of region.subRegions) {
+        const { sum, decimal } = compileSubRegion(subRegion, isDecimal);
+        isDecimal = decimal;
+        if (decimal) {
+            after += sum;
+        } else {
+            before += sum;
+        }
     }
-  }
-  return parseFloat(`${before}.${after}`);
+    return parseFloat(`${before}.${after}`);
 };
 
 /**
@@ -154,15 +159,15 @@ export const compileRegion = (region: Region): number => {
  * @returns {string}
  */
 const replaceRegionsInText = (regions: Region[], text: string): string => {
-  let replaced = text;
-  let offset = 0;
-  regions.forEach(region => {
-    const length = region.end - region.start + 1;
-    const replaceWith = `${compileRegion(region)}`;
-    replaced = splice(replaced, region.start + offset, length, replaceWith);
-    offset -= length - replaceWith.length;
-  });
-  return replaced;
+    let replaced = text;
+    let offset = 0;
+    regions.forEach((region) => {
+        const length = region.end - region.start + 1;
+        const replaceWith = `${compileRegion(region)}`;
+        replaced = splice(replaced, region.start + offset, length, replaceWith);
+        offset -= length - replaceWith.length;
+    });
+    return replaced;
 };
 
 /**
@@ -175,28 +180,28 @@ const replaceRegionsInText = (regions: Region[], text: string): string => {
  * @returns {string | number}
  */
 export const compiler = (
-  {
-    regions,
-    text,
-  }: {
-    regions: Region[];
-    text: string;
-  },
-  options: Options
+    {
+        regions,
+        text,
+    }: {
+        regions: Region[];
+        text: string;
+    },
+    options: Options,
 ): string | number | number[] => {
-  if (!regions) return text;
-  if (options.numbersOnly) {
-    return regions.map(region => compileRegion(region));
-  }
-  if (options.oneNumber) {
-    let temp = '';
-    regions.forEach(region => {
-      temp += compileRegion(region);
-    });
-    return parseFloat(temp);
-  }
-  if (regions[0].end - regions[0].start === text.length - 1) {
-    return compileRegion(regions[0]);
-  }
-  return replaceRegionsInText(regions, text);
+    if (regions.length === 0) return text;
+    if (options.numbersOnly) {
+        return regions.map((region) => compileRegion(region));
+    }
+    if (options.oneNumber) {
+        let temp = '';
+        regions.forEach((region) => {
+            temp += compileRegion(region);
+        });
+        return parseFloat(temp);
+    }
+    if (regions[0].end - regions[0].start === text.length - 1) {
+        return compileRegion(regions[0]);
+    }
+    return replaceRegionsInText(regions, text);
 };

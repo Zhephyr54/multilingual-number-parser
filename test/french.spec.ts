@@ -397,6 +397,20 @@ describe('Convert words to numbers', () => {
     chai.expect(result).to.equal('30 grammes de farine');
   });
 
+  // Other tests without any number
+  it('carottes', () => {
+    const words = 'carottes';
+    const result = wordsToNumbers(words, { language: Languages['fr-fr'] });
+    chai.expect(result).to.equal('carottes');
+  });
+
+  // Other tests without any number
+  it('sirop de fraise', () => {
+    const words = 'sirop de fraise';
+    const result = wordsToNumbers(words, { language: Languages['fr-fr'] });
+    chai.expect(result).to.equal('sirop de fraise');
+  });
+
   // Without proper '-' splitter (tryFix)
 
   it('soixante dix trucs', () => {

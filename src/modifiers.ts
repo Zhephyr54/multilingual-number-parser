@@ -1,23 +1,23 @@
 import {
-  DUTCH_MAGNITUDE,
-  DUTCH_TEN,
-  DUTCH_UNIT,
-  ENGLISH_MAGNITUDE,
-  ENGLISH_TEN,
-  ENGLISH_UNIT,
-  ENGLISH_SPECIFIC_SPLIT,
-  FRENCH_MAGNITUDE,
-  FRENCH_TEN,
-  FRENCH_UNIT,
-  TOKEN_TYPE,
+    DUTCH_MAGNITUDE,
+    DUTCH_TEN,
+    DUTCH_UNIT,
+    ENGLISH_MAGNITUDE,
+    ENGLISH_TEN,
+    ENGLISH_UNIT,
+    ENGLISH_SPECIFIC_SPLIT,
+    FRENCH_MAGNITUDE,
+    FRENCH_TEN,
+    FRENCH_UNIT,
+    TOKEN_TYPE,
 } from './constants';
 import { getAllIndexes } from './util';
 
 type Possibility = {
-  start: number;
-  end: number;
-  type: TOKEN_TYPE | 'splitter';
-  value: string;
+    start: number;
+    end: number;
+    type: TOKEN_TYPE | 'splitter';
+    value: string;
 };
 
 /**
@@ -30,51 +30,51 @@ type Possibility = {
  * @returns {Possibility[]}
  */
 function calculatePossibilities(
-  possibleUnits: string[],
-  possibleTens: string[],
-  possibleMagnitudes: string[],
-  chunk: string
+    possibleUnits: string[],
+    possibleTens: string[],
+    possibleMagnitudes: string[],
+    chunk: string,
 ): Possibility[] {
-  const possibilities: Possibility[] = [];
-  possibleUnits.forEach(possibility => {
-    const indexes = getAllIndexes(chunk, possibility);
-    indexes.forEach(start => {
-      const end = start + possibility.length - 1;
-      possibilities.push({
-        start,
-        end,
-        type: TOKEN_TYPE.UNIT,
-        value: possibility,
-      });
+    const possibilities: Possibility[] = [];
+    possibleUnits.forEach((possibility) => {
+        const indexes = getAllIndexes(chunk, possibility);
+        indexes.forEach((start) => {
+            const end = start + possibility.length - 1;
+            possibilities.push({
+                start,
+                end,
+                type: TOKEN_TYPE.UNIT,
+                value: possibility,
+            });
+        });
     });
-  });
 
-  possibleTens.forEach(possibility => {
-    const indexes = getAllIndexes(chunk, possibility);
-    indexes.forEach(start => {
-      const end = start + possibility.length - 1;
-      possibilities.push({
-        start,
-        end,
-        type: TOKEN_TYPE.TEN,
-        value: possibility,
-      });
+    possibleTens.forEach((possibility) => {
+        const indexes = getAllIndexes(chunk, possibility);
+        indexes.forEach((start) => {
+            const end = start + possibility.length - 1;
+            possibilities.push({
+                start,
+                end,
+                type: TOKEN_TYPE.TEN,
+                value: possibility,
+            });
+        });
     });
-  });
 
-  possibleMagnitudes.forEach(possibility => {
-    const indexes = getAllIndexes(chunk, possibility);
-    indexes.forEach(start => {
-      const end = start + possibility.length - 1;
-      possibilities.push({
-        start,
-        end,
-        type: TOKEN_TYPE.MAGNITUDE,
-        value: possibility,
-      });
+    possibleMagnitudes.forEach((possibility) => {
+        const indexes = getAllIndexes(chunk, possibility);
+        indexes.forEach((start) => {
+            const end = start + possibility.length - 1;
+            possibilities.push({
+                start,
+                end,
+                type: TOKEN_TYPE.MAGNITUDE,
+                value: possibility,
+            });
+        });
     });
-  });
-  return possibilities;
+    return possibilities;
 }
 
 /**
@@ -87,41 +87,39 @@ function calculatePossibilities(
  * @property {Possibility} longestEnd
  */
 function predict(
-  possibilities: Possibility[],
-  chunk: string
-): { longestStart: Possibility; longestEnd: Possibility } {
-  let startingPossibilities: Possibility[] = [];
-  let endingPossibilities: Possibility[] = [];
-  //@ts-ignore
-  let longestStart: Possibility = null;
-  //@ts-ignore
-  let longestEnd: Possibility = null;
+    possibilities: Possibility[],
+    chunk: string,
+): { longestStart?: Possibility; longestEnd?: Possibility } {
+    const startingPossibilities: Possibility[] = [];
+    const endingPossibilities: Possibility[] = [];
+    let longestStart: Possibility | undefined;
+    let longestEnd: Possibility | undefined;
 
-  possibilities.forEach(possibility => {
-    let start: boolean = false;
-    let end: boolean = false;
+    possibilities.forEach((possibility) => {
+        let start: boolean = false;
+        let end: boolean = false;
 
-    if (possibility.start === 0) {
-      start = true;
-      startingPossibilities.push(possibility);
-    }
-    if (possibility.end === chunk.length - 1) {
-      end = true;
-      endingPossibilities.push(possibility);
-    }
-    //Longest starting possibility
-    if (
-      start &&
-      (longestStart?.value!.length ?? 0) < possibility.value.length
-    ) {
-      longestStart = possibility;
-    }
-    //Longest ending possibility
-    if (end && (longestEnd?.value!.length ?? 0) < possibility.value.length) {
-      longestEnd = possibility;
-    }
-  });
-  return { longestStart, longestEnd };
+        if (possibility.start === 0) {
+            start = true;
+            startingPossibilities.push(possibility);
+        }
+        if (possibility.end === chunk.length - 1) {
+            end = true;
+            endingPossibilities.push(possibility);
+        }
+        //Longest starting possibility
+        if (
+            start &&
+            (longestStart?.value.length ?? 0) < possibility.value.length
+        ) {
+            longestStart = possibility;
+        }
+        //Longest ending possibility
+        if (end && (longestEnd?.value.length ?? 0) < possibility.value.length) {
+            longestEnd = possibility;
+        }
+    });
+    return { longestStart, longestEnd };
 }
 
 /**
@@ -130,120 +128,125 @@ function predict(
  * @param chunk a piece of the entire string
  * @returns {string | string[]} if string it's the original chunk, otherwise if string[] it's a uncompatible string made compatible
  */
-//@ts-ignore
 export const modifyDutch = (chunk: string): string | string[] => {
-  //@ts-ignore
-  const units = [...Object.keys(DUTCH_UNIT)];
-  const tens = [...Object.keys(DUTCH_TEN)];
-  const magnitudes = [...Object.keys(DUTCH_MAGNITUDE)];
+    const units = [...Object.keys(DUTCH_UNIT)];
+    const tens = [...Object.keys(DUTCH_TEN)];
+    const magnitudes = [...Object.keys(DUTCH_MAGNITUDE)];
 
-  if (
-    units.includes(chunk) ||
-    tens.includes(chunk) ||
-    magnitudes.includes(chunk)
-  ) {
-    return chunk; //This chunk is already a whole number that doesnt need converting
-  }
+    if (
+        units.includes(chunk) ||
+        tens.includes(chunk) ||
+        magnitudes.includes(chunk)
+    ) {
+        return chunk; //This chunk is already a whole number that doesnt need converting
+    }
 
-  const possibleUnits: string[] = units.filter(unit => chunk.includes(unit));
-  const possibleTens: string[] = tens.filter(unit => chunk.includes(unit));
-  const possibleMagnitudes: string[] = magnitudes.filter(unit =>
-    chunk.includes(unit)
-  );
+    const possibleUnits: string[] = units.filter((unit) =>
+        chunk.includes(unit),
+    );
+    const possibleTens: string[] = tens.filter((unit) => chunk.includes(unit));
+    const possibleMagnitudes: string[] = magnitudes.filter((unit) =>
+        chunk.includes(unit),
+    );
 
-  const possibilities: Possibility[] = calculatePossibilities(
-    possibleUnits,
-    possibleTens,
-    possibleMagnitudes,
-    chunk
-  );
-  let numbers: Possibility[] = [];
+    const possibilities: Possibility[] = calculatePossibilities(
+        possibleUnits,
+        possibleTens,
+        possibleMagnitudes,
+        chunk,
+    );
+    let numbers: Possibility[] = [];
 
-  // Filter out smaller units
-  for (const possibility of possibilities) {
-    switch (possibility.type) {
-      case TOKEN_TYPE.UNIT: {
-        // vijftien but contains 2 units: vijf and tien
-        // twinigste but contains twintig and twintigste itself
-        const nested = possibilities.find(p => {
-          return (
-            p.value !== possibility.value &&
-            p.start <= possibility.start &&
-            p.end >= possibility.end
-          );
-        });
-        if (!nested) {
-          numbers.push(possibility);
+    // Filter out smaller units
+    for (const possibility of possibilities) {
+        switch (possibility.type) {
+            case TOKEN_TYPE.UNIT: {
+                // vijftien but contains 2 units: vijf and tien
+                // twinigste but contains twintig and twintigste itself
+                const nested = possibilities.find((p) => {
+                    return (
+                        p.value !== possibility.value &&
+                        p.start <= possibility.start &&
+                        p.end >= possibility.end
+                    );
+                });
+                if (!nested) {
+                    numbers.push(possibility);
+                }
+                break;
+            }
+            case TOKEN_TYPE.TEN: {
+                // twinigste has priority over twintig, filter out twintig
+                const hasAdjective = possibilities.find((p) => {
+                    return (
+                        p.value.includes(possibility.value) &&
+                        p.start === possibility.start &&
+                        p.end > possibility.end
+                    );
+                });
+                if (!hasAdjective) numbers.push(possibility);
+                break;
+            }
+            default:
+                numbers.push(possibility);
+                break;
         }
-        break;
-      }
-      case TOKEN_TYPE.TEN: {
-        // twinigste has priority over twintig, filter out twintig
-        const hasAdjective = possibilities.find(p => {
-          return (
-            p.value.includes(possibility.value) &&
-            p.start === possibility.start &&
-            p.end > possibility.end
-          );
-        });
-        if (!hasAdjective) numbers.push(possibility);
-        break;
-      }
-      default:
-        numbers.push(possibility);
-        break;
     }
-  }
 
-  numbers = numbers.sort((a, b) => {
-    return a.start - b.start;
-  });
+    numbers = numbers.sort((a, b) => {
+        return a.start - b.start;
+    });
 
-  // Place numbers in english lexicongraphic order
-  // EXPECTED OUTPUT:
-  // UNIT + MAGNITUDE
-  // TEN + UNIT
-  // dutch examples:
-  // driehonderd = drie honderd
-  // vijfendertig = dertig vijf
-  // tweehonderdduizendvierendertig = twee honderd duizend dertig vier
-  const result: string[] = [];
-  for (let i = 0; i < numbers.length; i++) {
-    const previous = numbers[i - 1];
-    const next = numbers[i + 1];
-    const number = numbers[i];
-    if (!previous) {
-      if (
-        number.type === TOKEN_TYPE.UNIT &&
-        next.type === TOKEN_TYPE.MAGNITUDE
-      ) {
-        result.push(number.value);
-      } else if (
-        number.type === TOKEN_TYPE.UNIT &&
-        next.type === TOKEN_TYPE.TEN
-      ) {
-        result.push(next.value);
-      } else {
-        result.push(number.value);
-      }
-    } else {
-      if (number.type === TOKEN_TYPE.TEN && previous.type === TOKEN_TYPE.UNIT) {
-        result.push(previous.value);
-      } else if (
-        number.type === TOKEN_TYPE.MAGNITUDE &&
-        previous.type === TOKEN_TYPE.UNIT
-      ) {
-        result.push(number.value);
-      } else if (
-        number.type === TOKEN_TYPE.UNIT &&
-        next &&
-        next.type === TOKEN_TYPE.TEN
-      ) {
-        result.push(next.value);
-      } else result.push(number.value);
+    // Place numbers in english lexicongraphic order
+    // EXPECTED OUTPUT:
+    // UNIT + MAGNITUDE
+    // TEN + UNIT
+    // dutch examples:
+    // driehonderd = drie honderd
+    // vijfendertig = dertig vijf
+    // tweehonderdduizendvierendertig = twee honderd duizend dertig vier
+    const result: string[] = [];
+    for (let i = 0; i < numbers.length; i++) {
+        const previous = numbers[i - 1];
+        const next = numbers[i + 1];
+        const number = numbers[i];
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (!previous) {
+            if (
+                number.type === TOKEN_TYPE.UNIT &&
+                next.type === TOKEN_TYPE.MAGNITUDE
+            ) {
+                result.push(number.value);
+            } else if (
+                number.type === TOKEN_TYPE.UNIT &&
+                next.type === TOKEN_TYPE.TEN
+            ) {
+                result.push(next.value);
+            } else {
+                result.push(number.value);
+            }
+        } else {
+            if (
+                number.type === TOKEN_TYPE.TEN &&
+                previous.type === TOKEN_TYPE.UNIT
+            ) {
+                result.push(previous.value);
+            } else if (
+                number.type === TOKEN_TYPE.MAGNITUDE &&
+                previous.type === TOKEN_TYPE.UNIT
+            ) {
+                result.push(number.value);
+            } else if (
+                number.type === TOKEN_TYPE.UNIT &&
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                next &&
+                next.type === TOKEN_TYPE.TEN
+            ) {
+                result.push(next.value);
+            } else result.push(number.value);
+        }
     }
-  }
-  return result;
+    return result;
 };
 
 /**
@@ -252,130 +255,144 @@ export const modifyDutch = (chunk: string): string | string[] => {
  * @param chunk a piece of the entire string
  * @returns {string | string[]} if string it's the original chunk, otherwise if string[] it's a uncompatible string made compatible
  */
-//@ts-ignore
 export const modifyEnglish = (chunk: string): string | string[] => {
-  const units = [...Object.keys(ENGLISH_UNIT)];
-  const tens = [...Object.keys(ENGLISH_TEN)];
-  const magnitudes = [...Object.keys(ENGLISH_MAGNITUDE)];
+    const units = [...Object.keys(ENGLISH_UNIT)];
+    const tens = [...Object.keys(ENGLISH_TEN)];
+    const magnitudes = [...Object.keys(ENGLISH_MAGNITUDE)];
 
-  if (
-    units.includes(chunk) ||
-    tens.includes(chunk) ||
-    magnitudes.includes(chunk)
-  ) {
-    return chunk; //This chunk is already a whole number that doesnt need converting
-  }
-
-  const possibleUnits: string[] = units.filter(unit => chunk.includes(unit));
-  const possibleTens: string[] = tens.filter(unit => chunk.includes(unit));
-  const possibleMagnitudes: string[] = magnitudes.filter(unit =>
-    chunk.includes(unit)
-  );
-
-  const possibilities: Possibility[] = calculatePossibilities(
-    possibleUnits,
-    possibleTens,
-    possibleMagnitudes,
-    chunk
-  );
-  //Check which possibilities DO NOT OVERLAP and are valid.
-  if (possibilities.length >= 2) {
-    const { longestStart, longestEnd } = predict(possibilities, chunk);
-    if (!longestStart || !longestEnd) return [];
-    //Pick possibilities with shortest distance between start and end
-    if (longestStart.end === longestEnd.start - 1) {
-      //No Splitter in this chunk
-      return [longestStart.value, longestEnd.value];
-    } else {
-      // ! IMPORTANT: ENGLISH SPECIFIC SPLITTERS
-      //Splitter in this chunk
-      //@ts-ignore
-      let possibleSplitter: Possibility = null;
-      const possible = ENGLISH_SPECIFIC_SPLIT.some(splitter => {
-        const index = chunk.indexOf(splitter, longestStart.end);
-        if (index !== -1) {
-          possibleSplitter = {
-            start: index,
-            end: index + splitter.length - 1,
-            type: 'splitter',
-            value: splitter,
-          };
-          return (
-            longestStart.start === 0 &&
-            longestStart.end < possibleSplitter.start &&
-            possibleSplitter.end < longestEnd.start &&
-            longestEnd.end === chunk.length - 1
-          );
-        }
-        return false;
-      });
-
-      if (possible) {
-        //Perfect match
-        // ! ENGLISH SPECIFIC
-        if (
-          longestStart.type === TOKEN_TYPE.TEN &&
-          longestEnd.type === TOKEN_TYPE.UNIT
-        )
-          return [longestStart.value, longestEnd.value];
-        if (
-          longestStart.type === TOKEN_TYPE.UNIT &&
-          longestEnd.type === TOKEN_TYPE.MAGNITUDE
-        )
-          return [longestStart.value, longestEnd.value];
-      } else {
-        console.log(longestStart, longestEnd, possibleSplitter, chunk);
-        throw 'CANNOT PARSE CHUNK INTO NUMBER (ENGLISH: CANNOT FIND A GOOD SPLITTER)';
-      }
+    if (
+        units.includes(chunk) ||
+        tens.includes(chunk) ||
+        magnitudes.includes(chunk)
+    ) {
+        return chunk; //This chunk is already a whole number that doesnt need converting
     }
-  }
+
+    const possibleUnits: string[] = units.filter((unit) =>
+        chunk.includes(unit),
+    );
+    const possibleTens: string[] = tens.filter((unit) => chunk.includes(unit));
+    const possibleMagnitudes: string[] = magnitudes.filter((unit) =>
+        chunk.includes(unit),
+    );
+
+    const possibilities: Possibility[] = calculatePossibilities(
+        possibleUnits,
+        possibleTens,
+        possibleMagnitudes,
+        chunk,
+    );
+    //Check which possibilities DO NOT OVERLAP and are valid.
+    if (possibilities.length >= 2) {
+        const { longestStart, longestEnd } = predict(possibilities, chunk);
+        if (!longestStart || !longestEnd) return [];
+        //Pick possibilities with shortest distance between start and end
+        if (longestStart.end === longestEnd.start - 1) {
+            //No Splitter in this chunk
+            return [longestStart.value, longestEnd.value];
+        } else {
+            // ! IMPORTANT: ENGLISH SPECIFIC SPLITTERS
+            //Splitter in this chunk
+            let possibleSplitter: Possibility | undefined;
+            const possible = ENGLISH_SPECIFIC_SPLIT.some((splitter) => {
+                const index = chunk.indexOf(splitter, longestStart.end);
+                if (index !== -1) {
+                    possibleSplitter = {
+                        start: index,
+                        end: index + splitter.length - 1,
+                        type: 'splitter',
+                        value: splitter,
+                    };
+                    return (
+                        longestStart.start === 0 &&
+                        longestStart.end < possibleSplitter.start &&
+                        possibleSplitter.end < longestEnd.start &&
+                        longestEnd.end === chunk.length - 1
+                    );
+                }
+                return false;
+            });
+
+            if (possible) {
+                //Perfect match
+                // ! ENGLISH SPECIFIC
+                if (
+                    longestStart.type === TOKEN_TYPE.TEN &&
+                    longestEnd.type === TOKEN_TYPE.UNIT
+                )
+                    return [longestStart.value, longestEnd.value];
+                if (
+                    longestStart.type === TOKEN_TYPE.UNIT &&
+                    longestEnd.type === TOKEN_TYPE.MAGNITUDE
+                )
+                    return [longestStart.value, longestEnd.value];
+            } else {
+                console.log(longestStart, longestEnd, possibleSplitter, chunk);
+                throw new Error(
+                    'CANNOT PARSE CHUNK INTO NUMBER (ENGLISH: CANNOT FIND A GOOD SPLITTER)',
+                );
+            }
+        }
+    }
+
+    return [];
 };
 
-//@ts-ignore
 export const modifyFrench = (chunk: string): string | string[] => {
-  const units = [...Object.keys(FRENCH_UNIT)];
-  const tens = [...Object.keys(FRENCH_TEN)];
-  const magnitudes = [...Object.keys(FRENCH_MAGNITUDE)];
+    const units = [...Object.keys(FRENCH_UNIT)];
+    const tens = [...Object.keys(FRENCH_TEN)];
+    const magnitudes = [...Object.keys(FRENCH_MAGNITUDE)];
 
-  if (
-    units.includes(chunk) ||
-    tens.includes(chunk) ||
-    magnitudes.includes(chunk)
-  ) {
-    return chunk; //This chunk is already a whole number that doesnt need converting
-  }
-
-  const possibleUnits: string[] = units.filter(unit => chunk.includes(unit));
-  const possibleTens: string[] = tens.filter(unit => chunk.includes(unit));
-  const possibleMagnitudes: string[] = magnitudes.filter(unit =>
-    chunk.includes(unit)
-  );
-
-  const possibilities: Possibility[] = calculatePossibilities(
-    possibleUnits,
-    possibleTens,
-    possibleMagnitudes,
-    chunk
-  );
-  //Check which possibilities DO NOT OVERLAP and are valid.
-  if (possibilities.length >= 2) {
-    const { longestStart, longestEnd } = predict(possibilities, chunk);
-    if (!longestStart || !longestEnd) return [];
-    
-    // Pick longest part of TEN type and the mathing remaining part
-    if (longestStart.type !== TOKEN_TYPE.TEN) {
-      throw 'CANNOT PARSE CHUNK INTO NUMBER (FRENCH: LONGEST PART IS NOT OF TYPE TEN)'
+    if (
+        units.includes(chunk) ||
+        tens.includes(chunk) ||
+        magnitudes.includes(chunk)
+    ) {
+        return chunk; //This chunk is already a whole number that doesnt need converting
     }
 
-    const matchingUnit = possibilities.find((possibility) =>
-      possibility.type === TOKEN_TYPE.UNIT && possibility.start > longestStart.end && possibility.end === chunk.length - 1
+    const possibleUnits: string[] = units.filter((unit) =>
+        chunk.includes(unit),
     );
-    if (matchingUnit === undefined) {
-      throw 'CANNOT PARSE CHUNK INTO NUMBER (FRENCH: CAN\'T FIND UNIT PART)';
+    const possibleTens: string[] = tens.filter((unit) => chunk.includes(unit));
+    const possibleMagnitudes: string[] = magnitudes.filter((unit) =>
+        chunk.includes(unit),
+    );
+
+    const possibilities: Possibility[] = calculatePossibilities(
+        possibleUnits,
+        possibleTens,
+        possibleMagnitudes,
+        chunk,
+    );
+    //Check which possibilities DO NOT OVERLAP and are valid.
+    if (possibilities.length >= 2) {
+        const { longestStart, longestEnd } = predict(possibilities, chunk);
+        if (!longestStart || !longestEnd) return [];
+
+        // Pick longest part of TEN type and the mathing remaining part
+        if (longestStart.type !== TOKEN_TYPE.TEN) {
+            throw new Error(
+                'CANNOT PARSE CHUNK INTO NUMBER (FRENCH: LONGEST PART IS NOT OF TYPE TEN)',
+            );
+        }
+
+        const matchingUnit = possibilities.find(
+            (possibility) =>
+                possibility.type === TOKEN_TYPE.UNIT &&
+                possibility.start > longestStart.end &&
+                possibility.end === chunk.length - 1,
+        );
+        if (matchingUnit === undefined) {
+            throw new Error(
+                "CANNOT PARSE CHUNK INTO NUMBER (FRENCH: CAN'T FIND UNIT PART)",
+            );
+        }
+
+        return [longestStart.value, matchingUnit.value];
     }
 
-    return [longestStart.value, matchingUnit.value]
-  }
+    return [];
 };
 
 // ! MY FIRST VERSION, KINDA WORKED BUT UNREADBLE PIECE OF GARABGE, SHOULD KEEP IT FOR REFERENCE/FUTURE
